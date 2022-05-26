@@ -2,6 +2,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -44,6 +45,8 @@ func E(args ...interface{}) error {
 			e.Kind = arg
 		case Severity:
 			e.Sev = arg
+		case string:
+			e.Err = errors.New(arg)
 		default:
 			panic("bad call to E")
 		}

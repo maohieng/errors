@@ -1,4 +1,4 @@
-module github.com/maohieng/errors
+module github.com/maohieng/errs
 
 go 1.18
 
