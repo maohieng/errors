@@ -1,5 +1,5 @@
 // Package errors is inspired from a presentation https://youtu.be/4WIhhzTTd0Y
-package errors
+package errs
 
 import (
 	"errors"

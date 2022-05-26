@@ -1,7 +1,6 @@
-// Borrow from go-kit/log's level
+package errs
 
-package errors
-
+// Severity is borrowed from go-kit/log's level
 type Severity interface {
 	String() string
 	levelVal()
