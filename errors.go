@@ -13,10 +13,14 @@ import (
 type Op string
 
 type Error struct {
-	Op   Op       // operation
-	Kind Kind     // category of errors
-	Err  error    // the wrapped error
-	Sev  Severity // level of error
+	// operation where the error occurs
+	Op Op
+	// category of errors
+	Kind Kind
+	// the wrapped error, must not nil
+	Err error
+	// level of error
+	Sev Severity
 	//... application specific data
 }
 
@@ -25,12 +29,24 @@ func (err *Error) Error() string {
 	//return UnwrapErrors(err.Err)
 }
 
-//func (err *Error) String() string {
-//	return fmt.Sprintf("%v, %s", Ops(err), UnwrapErrors(err.Err))
-//}
+// New creates an error of Error.
+// New actually calls E.
+// It's used to make sure an error is provided to avoid nil pointer panic.
+// If there's an error or string provided in args, the err will be replaced
+// by the args error or an error from the args string.
+func New(err error, args ...interface{}) error {
+	if len(args) == 0 {
+		return E(err)
+	}
+
+	args = append(args, err)
+
+	//return E(args...)
+	return E(args...)
+}
 
 // E creates an error of Error from args that must be type of
-// Op, error, Kind, level.Value
+// Op, error, Kind, level.Value or a string of error
 func E(args ...interface{}) error {
 	e := &Error{
 		Sev: SevereError(), // default severity
@@ -48,7 +64,7 @@ func E(args ...interface{}) error {
 		case string:
 			e.Err = errors.New(arg)
 		default:
-			panic("bad call to E")
+			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
 		}
 	}
 
