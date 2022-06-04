@@ -30,23 +30,40 @@ func (err *Error) Error() string {
 }
 
 // New creates an error of Error.
-// New actually calls E.
+// New is the same as E.
 // It's used to make sure an error is provided to avoid nil pointer panic.
 // If there's an error or string provided in args, the err will be replaced
 // by the args error or an error from the args string.
 func New(err error, args ...interface{}) error {
-	if len(args) == 0 {
-		return E(err)
+	e := &Error{
+		Sev: SevereError(), // default severity
+	}
+	e.Err = err
+
+	for _, arg := range args {
+		switch arg := arg.(type) {
+		case Op:
+			e.Op = arg
+		case error:
+			e.Err = arg
+		case Kind:
+			e.Kind = arg
+		case Severity:
+			e.Sev = arg
+		case string:
+			e.Err = errors.New(arg)
+		default:
+			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
+		}
 	}
 
-	args = append(args, err)
-
-	//return E(args...)
-	return E(args...)
+	return e
 }
 
 // E creates an error of Error from args that must be type of
 // Op, error, Kind, level.Value or a string of error
+// Prefer to use New to avoid missing an error provided which
+// is required.
 func E(args ...interface{}) error {
 	e := &Error{
 		Sev: SevereError(), // default severity
