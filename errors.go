@@ -60,6 +60,10 @@ func New(err error, args ...interface{}) error {
 	return e
 }
 
+func SNew(errMsg string, args ...interface{}) error {
+	return New(errors.New(errMsg), args...)
+}
+
 // E creates an error of Error from args that must be type of
 // Op, error, Kind, level.Value or a string of error
 // Prefer to use New to avoid missing an error provided which
