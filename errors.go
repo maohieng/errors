@@ -4,6 +4,8 @@ package errs
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"strings"
 )
 
 // Op is a unique string describing a
@@ -57,11 +59,41 @@ func New(err error, args ...interface{}) error {
 		}
 	}
 
+	// create invoked frame for no op provided
+	if e.Op == "" {
+		pc := make([]uintptr, 10) // at least 1 entry needed
+		n := runtime.Callers(2, pc)
+		frames := runtime.CallersFrames(pc[:n])
+		frame, _ := frames.Next()
+		if len(frame.Function) > 0 {
+			spsl := strings.Split(frame.Function, "/")
+			lastSp := spsl[len(spsl)-1]
+			if lastSp != "errs.SNew" {
+				e.Op = Op(lastSp)
+			}
+		}
+	}
+
 	return e
 }
 
 func SNew(errMsg string, args ...interface{}) error {
-	return New(errors.New(errMsg), args...)
+	var e *Error = New(errors.New(errMsg), args...).(*Error)
+
+	// create invoked frame for no op provided
+	if e.Op == "" {
+		pc := make([]uintptr, 10) // at least 1 entry needed
+		n := runtime.Callers(2, pc)
+		frames := runtime.CallersFrames(pc[:n])
+		frame, _ := frames.Next()
+		if len(frame.Function) > 0 {
+			spsl := strings.Split(frame.Function, "/")
+			lastSp := spsl[len(spsl)-1]
+			e.Op = Op(lastSp)
+		}
+	}
+
+	return e
 }
 
 // E creates an error of Error from args that must be type of
@@ -69,6 +101,8 @@ func SNew(errMsg string, args ...interface{}) error {
 //
 // Prefer using New or SNew to avoid missing an error providing which
 // is required.
+// Deprecated: This func is no longer maintained,
+// and will remove in the next release.
 func E(args ...interface{}) error {
 	e := &Error{
 		Sev: SevereError(), // default severity

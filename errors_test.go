@@ -1,20 +1,25 @@
 package errs
 
-import (
-	"errors"
-	"testing"
-)
+import "testing"
 
-func BenchmarkNew(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		const ops Op = "Oop"
-		New(errors.New("Test error"), ops, KindNotAllowed)
-	}
+func errInit() error {
+	return SNew("Init error")
 }
 
-func BenchmarkE(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		const ops Op = "Oop"
-		E(errors.New("Test error"), ops, KindNotAllowed)
-	}
+func TestWithOps(t *testing.T) {
+	const op Op = "testing.WithOp1"
+	err := SNew("Init error", op)
+
+	const op2 Op = "testing.WithOp2"
+	err = New(err, op2)
+
+	t.Log(err.Error())
+}
+
+func TestWithoutOps(t *testing.T) {
+	err := errInit()
+
+	err = New(err)
+
+	t.Log(err.Error())
 }
