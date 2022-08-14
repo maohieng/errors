@@ -1,9 +1,10 @@
 package errs
 
 import (
+	"net/http"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net/http"
 )
 
 // Kind groups all errors into smaller categories.
@@ -20,6 +21,7 @@ type TransportCode interface {
 
 // All constant values must be the same as grpc's Code
 const (
+	KindOk            Kind = 0
 	KindBadRequest    Kind = 3
 	KindNotFound      Kind = 5
 	KindUnauthorized  Kind = 16
@@ -70,6 +72,10 @@ func KindOfGRPCCode(code codes.Code) Kind {
 	return Kind(code)
 }
 
+// KindOfGrpcErr returns a Kind from the given gRPC code
+// if it is a Status error.
+// KindOk if err is nil, KindUnknown otherwise.
+// See status.Code for more info.
 func KindOfGrpcErr(err error) Kind {
 	c := status.Code(err)
 	return Kind(c)

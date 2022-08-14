@@ -77,8 +77,8 @@ func New(err error, args ...interface{}) error {
 	return e
 }
 
-func SNew(errMsg string, args ...interface{}) error {
-	var e *Error = New(errors.New(errMsg), args...).(*Error)
+func SNew(msg string, args ...interface{}) error {
+	var e *Error = New(errors.New(msg), args...).(*Error)
 
 	// create invoked frame for no op provided
 	if e.Op == "" {
@@ -103,29 +103,29 @@ func SNew(errMsg string, args ...interface{}) error {
 // is required.
 // Deprecated: This func is no longer maintained,
 // and will remove in the next release.
-func E(args ...interface{}) error {
-	e := &Error{
-		Sev: SevereError(), // default severity
-	}
-	for _, arg := range args {
-		switch arg := arg.(type) {
-		case Op:
-			e.Op = arg
-		case error:
-			e.Err = arg
-		case Kind:
-			e.Kind = arg
-		case Severity:
-			e.Sev = arg
-		case string:
-			e.Err = errors.New(arg)
-		default:
-			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
-		}
-	}
+// func E(args ...interface{}) error {
+// 	e := &Error{
+// 		Sev: SevereError(), // default severity
+// 	}
+// 	for _, arg := range args {
+// 		switch arg := arg.(type) {
+// 		case Op:
+// 			e.Op = arg
+// 		case error:
+// 			e.Err = arg
+// 		case Kind:
+// 			e.Kind = arg
+// 		case Severity:
+// 			e.Sev = arg
+// 		case string:
+// 			e.Err = errors.New(arg)
+// 		default:
+// 			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
+// 		}
+// 	}
 
-	return e
-}
+// 	return e
+// }
 
 // Ops returns the "stack" of operations
 // for each generated error.
@@ -147,7 +147,7 @@ func Ops(e *Error) []Op {
 func Kinds(err error) Kind {
 	e, ok := err.(*Error)
 	if !ok {
-		return KindInternal
+		return KindOfGrpcErr(err)
 	}
 
 	if e.Kind != 0 {
