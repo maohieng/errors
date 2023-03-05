@@ -129,7 +129,12 @@ func SNew(msg string, args ...interface{}) error {
 
 // Ops returns the "stack" of operations
 // for each generated error.
-func Ops(e *Error) []Op {
+func Ops(err error) []Op {
+	e, ok := err.(*Error)
+	if !ok {
+		return []Op{}
+	}
+
 	res := []Op{e.Op}
 
 	subErr, ok := e.Err.(*Error)
