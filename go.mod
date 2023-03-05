@@ -1,4 +1,4 @@
-module github.com/maohieng/errs/v2
+module github.com/maohieng/errs
 
 go 1.20
 
