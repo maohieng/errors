@@ -2,34 +2,79 @@ package errs
 
 import (
 	"errors"
-	"os"
+	"fmt"
 	"testing"
 )
 
-var errs error
-
-func TestMain(m *testing.M) {
-	os.Exit(func() int {
-		const op Op = "Op1"
-		errs = SNew("Init error", op)
-
-		const op2 Op = "Op2"
-		errs = New(errs, op2)
-		return m.Run()
-	}())
+// sNew returns an error by getting default op as func name
+// if op is not provided.
+func sNew(op Op) error {
+	return SNew("error of string", op)
 }
 
-func TestWithOps(t *testing.T) {
-	t.Log(errs.Error())
+// eNew returns an error by getting default op as func name
+// if op is not provided.
+func eNew(op Op) error {
+	return New(errors.New("error of new"), op)
 }
 
-func TestWithoutOps(t *testing.T) {
+// stackErrs creates a stack of 10 errors
+func stackErrs() error {
+	var err = SNew("error origin", Op("op origin"))
+	for i := 1; i < 10; i++ {
+		//var msg = fmt.Sprintf("error #%s", i)
+		var op Op = Op(fmt.Sprintf("op #%d", i))
+		err = New(err, op, Kind(i))
+	}
+
+	return err
+}
+
+func TestNewWithOps(t *testing.T) {
+	e1 := eNew(Op("eOp"))
+	t.Log(e1.Error())
+	e2 := sNew(Op("sOp"))
+	t.Log(e2.Error())
+	t.Log(New(New(e1, Op("Op1")), Op("0p2")).Error())
+}
+
+func TestNewWithoutOps(t *testing.T) {
 	err := SNew("root error msg")
 	err = New(err)
+
 	t.Log(err.Error())
+	t.Log(New(New(New(err))).Error())
 }
 
 func TestOps(t *testing.T) {
-	t.Log(Ops(errs))
-	t.Log(Ops(errors.New("error from errors package")))
+	t.Log(Ops(stackErrs()))
+}
+
+func TestUnwrap(t *testing.T) {
+	t.Log(Unwrap(stackErrs()))
+}
+
+func TestKinds(t *testing.T) {
+	t.Log(Kinds(stackErrs()))
+}
+
+func TestPrintError(t *testing.T) {
+	t.Log(stackErrs())
+}
+
+// “
+//
+//	go test -bench=Prime -count 12 | tee fmt.txt
+//
+// “
+// “
+//
+//	benchstat fmt.txt builder.txt
+//
+// “
+func BenchmarkError(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		err := stackErrs()
+		err.Error()
+	}
 }

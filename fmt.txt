@@ -1,0 +1,18 @@
+goos: darwin
+goarch: amd64
+pkg: github.com/maohieng/errs
+cpu: Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz
+BenchmarkError-12    	  297159	      4023 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  307032	      3902 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  311096	      3891 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  303907	      3825 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  311833	      3889 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  302076	      3884 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  313678	      3843 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  304711	      3859 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  309308	      3832 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  303403	      3871 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  300889	      3826 ns/op	    2153 B/op	      61 allocs/op
+BenchmarkError-12    	  306033	      3863 ns/op	    2153 B/op	      61 allocs/op
+PASS
+ok  	github.com/maohieng/errs	15.733s
