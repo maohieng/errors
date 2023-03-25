@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -18,24 +19,45 @@ func eNew(op Op) error {
 	return New(errors.New("error of new"), op)
 }
 
-// stackErrs creates a stack of 10 errors
+// stackErrs creates a stack of errors
 func stackErrs() error {
-	var err = SNew("error origin", Op("op origin"))
+	var err = errors.New("msg origin")
 	for i := 1; i < 10; i++ {
 		//var msg = fmt.Sprintf("error #%s", i)
-		var op Op = Op(fmt.Sprintf("op #%d", i))
-		err = New(err, op, Kind(i))
+		var op Op = Op(fmt.Sprintf("op.%d", i))
+		if i == 5 {
+			err = New(err, op, Kind(i))
+		} else {
+			err = New(err, op, Kind(i), fmt.Sprintf("err at %d", i))
+		}
 	}
 
 	return err
 }
 
+// “
+//
+//	go test -bench=Error -benchmem -count 12 | tee builder2.txt
+//
+// “
+// “
+//
+//	benchstat fmt.txt builder2.txt
+//
+// “
+func BenchmarkError(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		err := stackErrs()
+		err.Error()
+	}
+}
+
 func TestNewWithOps(t *testing.T) {
-	e1 := eNew(Op("eOp"))
+	e1 := eNew(Op("e.Op"))
 	t.Log(e1)
-	e2 := sNew(Op("sOp"))
+	e2 := sNew(Op("s.Op"))
 	t.Log(e2)
-	t.Log(New(New(e1, Op("Op1")), Op("0p2")))
+	t.Log(New(New(e1, Op("Op.1")), Op("Op.2")))
 }
 
 func TestNewWithoutOps(t *testing.T) {
@@ -63,19 +85,19 @@ func TestPrintError(t *testing.T) {
 	t.Log(stackErrs())
 }
 
-// “
-//
-//	go test -bench=Prime -count 12 | tee fmt.txt
-//
-// “
-// “
-//
-//	benchstat fmt.txt builder.txt
-//
-// “
-func BenchmarkError(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		err := stackErrs()
-		err.Error()
+func TestPrintGeneralUse(t *testing.T) {
+	err := errors.New("database error")
+	err = New(err, Op("persist.Create"), "unable to create record")
+	err = New(err, Op("svc.Create"), KindInternal)
+	t.Log(err)
+}
+
+func TestStackJSON(t *testing.T) {
+	stack := Errors(stackErrs())
+	ststr, err := json.Marshal(stack)
+	if err != nil {
+		t.Fatalf("Expect success, got %v", err)
 	}
+
+	t.Log(string(ststr))
 }

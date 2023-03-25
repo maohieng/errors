@@ -17,9 +17,6 @@ type Severity interface {
 // SevereError returns the unique value added to error events by Error.
 func SevereError() Severity { return errorValue }
 
-// SevereWarn returns the unique value added to error events by Warn.
-func SevereWarn() Severity { return warnValue }
-
 // SeverePanic returns the unique value added to error events by Panic.
 func SeverePanic() Severity { return panicValue }
 
@@ -30,9 +27,6 @@ type levelValue struct {
 
 var (
 	errorValue = &levelValue{level: levelError, name: "error"}
-	// warnValue is deprecated
-	// Deprecated: no more usage and will be removed in the next release
-	warnValue  = &levelValue{level: levelWarn, name: "warn"}
 	panicValue = &levelValue{level: levelPanic, name: "panic"}
 )
 

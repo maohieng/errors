@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -15,6 +16,7 @@ import (
 type Op string
 
 type Error struct {
+	msg string
 	// operation where the error occurs
 	op Op
 	// category of errors
@@ -24,33 +26,6 @@ type Error struct {
 	// level of error
 	sev Severity
 	//... application specific data
-}
-
-func (err *Error) Error() string {
-	// this is fast implementation compare below 👇
-	// return fmt.Sprintf("%v, %s", Ops(err), Unwrap(err.Err).Error())
-
-	// this new implementation improves
-	// - 49% performance
-	// - reduce 44% allocation
-	var sb strings.Builder
-	sb.WriteRune('[')
-	sb.WriteString(string(err.op))
-
-	var e error = err.err
-	for {
-		sube, ok := e.(*Error)
-		if !ok {
-			sb.WriteString("], ")
-			sb.WriteString(e.Error())
-			break
-		}
-		e = sube.err
-		sb.WriteRune(' ')
-		sb.WriteString(string(sube.op))
-	}
-
-	return sb.String()
 }
 
 // New creates an error of Error.
@@ -75,7 +50,7 @@ func New(err error, args ...interface{}) error {
 		case Severity:
 			e.sev = arg
 		case string:
-			e.op = Op(arg)
+			e.msg = arg
 		default:
 			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
 		}
@@ -118,36 +93,55 @@ func SNew(msg string, args ...interface{}) error {
 	return e
 }
 
-// E creates an error of Error from args that must be type of
-// Op, error, Kind, level.Value or a string of error
-//
-// Prefer using New or SNew to avoid missing an error providing which
-// is required.
-// Deprecated: This func is no longer maintained,
-// and will remove in the next release.
-// func E(args ...interface{}) error {
-// 	e := &Error{
-// 		Sev: SevereError(), // default severity
-// 	}
-// 	for _, arg := range args {
-// 		switch arg := arg.(type) {
-// 		case Op:
-// 			e.op = arg
-// 		case error:
-// 			e.err = arg
-// 		case Kind:
-// 			e.kind = arg
-// 		case Severity:
-// 			e.sev = arg
-// 		case string:
-// 			e.err = errors.New(arg)
-// 		default:
-// 			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
-// 		}
-// 	}
+func (err *Error) Error() string {
+	// The goal of error msg is for:
+	// 1. descriptive msg to debugger to understand
+	//	 where the cause come from
+	// 2. minimized for client be able to capture the
+	//   last error msg from the response body,
+	//   but not recommended as it not support
+	//   the localization msg for now.
 
-// 	return e
-// }
+	// return fmt.Sprintf("%v, %s", Ops(err), Unwrap(err.Err).Error())
+
+	var sb strings.Builder
+	sb.WriteString(string(err.op))
+	if err.msg != "" {
+		sb.WriteRune(' ')
+		sb.WriteString(err.msg)
+	}
+
+	var k Kind = err.kind
+
+	var e error = err.err
+	for {
+		sube, ok := e.(*Error)
+		if !ok {
+			break
+		}
+		e = sube.err
+		sb.WriteRune(':')
+		sb.WriteRune(' ')
+		sb.WriteString(string(sube.op))
+		if sube.msg != "" {
+			sb.WriteRune(' ')
+			sb.WriteString(sube.msg)
+		}
+		if k == 0 {
+			k = sube.kind
+		}
+	}
+
+	sb.WriteString(", ")
+	sb.WriteString(e.Error())
+	if k != 0 {
+		sb.WriteString(", ")
+		sb.WriteString("code ")
+		sb.WriteString(strconv.Itoa(int(k)))
+	}
+
+	return sb.String()
+}
 
 // Ops returns the "stack" of operations
 // for each generated error.
@@ -170,7 +164,7 @@ func Ops(err error) []Op {
 	return res
 }
 
-// Kinds unwraps the last stack error's Kind.
+// Kinds unwraps the top stack error's Kind.
 func Kinds(err error) Kind {
 	e, ok := err.(*Error)
 	if !ok {

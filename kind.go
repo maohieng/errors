@@ -12,30 +12,27 @@ import (
 // Or it can be your own defined codes.
 type Kind uint32
 
-type TransportCode interface {
-	// HTTPCode converts its implementation type into HTTP status code.
-	HTTPCode() int
-	// GRPCCode converts its implementation type into GRPC status code.
-	GRPCCode() codes.Code
-}
+//type TransportCode interface {
+//	// HTTPCode converts its implementation type into HTTP status code.
+//	HTTPCode() int
+//	// GRPCCode converts its implementation type into GRPC status code.
+//	GRPCCode() codes.Code
+//}
 
 // All constant values must be the same as grpc's Code
 const (
-	KindOk            Kind = 0
+	KindUnknown       Kind = 2
 	KindBadRequest    Kind = 3
 	KindNotFound      Kind = 5
-	KindUnauthorized  Kind = 16
-	KindNotAllowed    Kind = 7
-	KindInternal      Kind = 13
-	KindUnknown       Kind = 2
 	KindAlreadyExists Kind = 6
+	KindNotAllowed    Kind = 7
+	KindUnauthorized  Kind = 16
+	KindInternal      Kind = 13
 )
 
 func (k Kind) HTTPCode() int {
 	switch k {
-	case KindBadRequest:
-		return http.StatusBadRequest
-	case KindAlreadyExists:
+	case KindBadRequest, KindUnknown, KindAlreadyExists:
 		return http.StatusBadRequest
 	case KindNotFound:
 		return http.StatusNotFound
