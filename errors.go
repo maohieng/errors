@@ -16,13 +16,13 @@ type Op string
 
 type Error struct {
 	// operation where the error occurs
-	Op Op
+	op Op
 	// category of errors
-	Kind Kind
+	kind Kind
 	// the wrapped error, must not nil
-	Err error
+	err error
 	// level of error
-	Sev Severity
+	sev Severity
 	//... application specific data
 }
 
@@ -35,9 +35,9 @@ func (err *Error) Error() string {
 	// - reduce 44% allocation
 	var sb strings.Builder
 	sb.WriteRune('[')
-	sb.WriteString(string(err.Op))
+	sb.WriteString(string(err.op))
 
-	var e error = err.Err
+	var e error = err.err
 	for {
 		sube, ok := e.(*Error)
 		if !ok {
@@ -45,9 +45,9 @@ func (err *Error) Error() string {
 			sb.WriteString(e.Error())
 			break
 		}
-		e = sube.Err
+		e = sube.err
 		sb.WriteRune(' ')
-		sb.WriteString(string(sube.Op))
+		sb.WriteString(string(sube.op))
 	}
 
 	return sb.String()
@@ -60,29 +60,29 @@ func (err *Error) Error() string {
 // by the args error or an error from the args string.
 func New(err error, args ...interface{}) error {
 	e := &Error{
-		Sev: SevereError(), // default severity
+		sev: SevereError(), // default severity
 	}
-	e.Err = err
+	e.err = err
 
 	for _, arg := range args {
 		switch arg := arg.(type) {
 		case Op:
-			e.Op = arg
+			e.op = arg
 		case error:
-			e.Err = arg
+			e.err = arg
 		case Kind:
-			e.Kind = arg
+			e.kind = arg
 		case Severity:
-			e.Sev = arg
-		//case string:
-		//	e.Err = errors.New(arg)
+			e.sev = arg
+		case string:
+			e.op = Op(arg)
 		default:
 			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
 		}
 	}
 
 	// create invoked frame for no op provided
-	if e.Op == "" {
+	if e.op == "" {
 		pc := make([]uintptr, 10) // at least 1 entry needed
 		n := runtime.Callers(2, pc)
 		frames := runtime.CallersFrames(pc[:n])
@@ -91,7 +91,7 @@ func New(err error, args ...interface{}) error {
 			spsl := strings.Split(frame.Function, "/")
 			lastSp := spsl[len(spsl)-1]
 			if lastSp != "errs.SNew" {
-				e.Op = Op(lastSp)
+				e.op = Op(lastSp)
 			}
 		}
 	}
@@ -103,7 +103,7 @@ func SNew(msg string, args ...interface{}) error {
 	var e *Error = New(errors.New(msg), args...).(*Error)
 
 	// create invoked frame for no op provided
-	if e.Op == "" {
+	if e.op == "" {
 		pc := make([]uintptr, 10) // at least 1 entry needed
 		n := runtime.Callers(2, pc)
 		frames := runtime.CallersFrames(pc[:n])
@@ -111,7 +111,7 @@ func SNew(msg string, args ...interface{}) error {
 		if len(frame.Function) > 0 {
 			spsl := strings.Split(frame.Function, "/")
 			lastSp := spsl[len(spsl)-1]
-			e.Op = Op(lastSp)
+			e.op = Op(lastSp)
 		}
 	}
 
@@ -132,15 +132,15 @@ func SNew(msg string, args ...interface{}) error {
 // 	for _, arg := range args {
 // 		switch arg := arg.(type) {
 // 		case Op:
-// 			e.Op = arg
+// 			e.op = arg
 // 		case error:
-// 			e.Err = arg
+// 			e.err = arg
 // 		case Kind:
-// 			e.Kind = arg
+// 			e.kind = arg
 // 		case Severity:
-// 			e.Sev = arg
+// 			e.sev = arg
 // 		case string:
-// 			e.Err = errors.New(arg)
+// 			e.err = errors.New(arg)
 // 		default:
 // 			panic(fmt.Sprintf("bad call to E. unsupported %v", arg))
 // 		}
@@ -157,9 +157,9 @@ func Ops(err error) []Op {
 		return []Op{}
 	}
 
-	res := []Op{e.Op}
+	res := []Op{e.op}
 
-	subErr, ok := e.Err.(*Error)
+	subErr, ok := e.err.(*Error)
 
 	if !ok {
 		return res
@@ -177,11 +177,11 @@ func Kinds(err error) Kind {
 		return KindOfGrpcErr(err)
 	}
 
-	if e.Kind != 0 {
-		return e.Kind
+	if e.kind != 0 {
+		return e.kind
 	}
 
-	return Kinds(e.Err)
+	return Kinds(e.err)
 }
 
 // Unwrap unwraps the original error.
@@ -191,5 +191,5 @@ func Unwrap(err error) error {
 		return err
 	}
 
-	return Unwrap(e.Err)
+	return Unwrap(e.err)
 }

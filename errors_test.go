@@ -32,18 +32,19 @@ func stackErrs() error {
 
 func TestNewWithOps(t *testing.T) {
 	e1 := eNew(Op("eOp"))
-	t.Log(e1.Error())
+	t.Log(e1)
 	e2 := sNew(Op("sOp"))
-	t.Log(e2.Error())
-	t.Log(New(New(e1, Op("Op1")), Op("0p2")).Error())
+	t.Log(e2)
+	t.Log(New(New(e1, Op("Op1")), Op("0p2")))
 }
 
 func TestNewWithoutOps(t *testing.T) {
-	err := SNew("root error msg")
-	err = New(err)
+	err1 := sNew("")
+	err2 := eNew("")
 
-	t.Log(err.Error())
-	t.Log(New(New(New(err))).Error())
+	t.Log(err1)
+	t.Log(err2)
+	t.Log(New(New(New(err1))))
 }
 
 func TestOps(t *testing.T) {
