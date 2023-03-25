@@ -1,3 +1,16 @@
+## [1.1.0](https://github.com/maohieng/errs/compare/v1.0.3...v1.1.0) (2023-03-26)
+
+### Changes
+* `Error()` display format, for example
+` svc.Create: persist.Create unable to create record, database error, code 13`
+* Add support error stack msg
+* Bring back support `string` args that was removed in `v1.0.2` 
+to be used as stack msg
+
+### New
+* `Stack` via `Errors()` func that support json marshal. 
+Generally be used to print error detail.
+
 ## [1.0.2](https://github.com/maohieng/errs/compare/v1.0.1...v1.0.2) (2023-03-25)
 
 ### Breaking changes
